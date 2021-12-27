@@ -4,9 +4,11 @@ import numpy as np
 
 from models.senet import SENet
 from models.senetbig import SENetBig
+from models.vornet import VorNet
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from games.connect3x3 import Connect3x3
+from games.vortex import Vortex, Vortex7, Vortex11
 from neural_network import NeuralNetwork
 from trainer import Trainer
 from experiments import evaluate_against_uninformed

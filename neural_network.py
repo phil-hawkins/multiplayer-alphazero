@@ -1,6 +1,17 @@
 import torch
 import numpy as np
 import os
+from games.hex.vortex_board import VortexBoard
+
+def get_batch_states(batch):
+    states = np.stack(batch[:,0])
+    if isinstance(batch[0][0], VortexBoard):
+        nn_states = [s.nn_attr() for s in states]
+        nn_states = np.stack(nn_states)
+    else:
+        nn_states = states
+        
+    return nn_states, states
 
 # Object that manages interfacing data with the underlying PyTorch model, as well as checkpointing models.
 class NeuralNetwork():
@@ -26,8 +37,8 @@ class NeuralNetwork():
         batch_size=self.batch_size
         idx = np.random.randint(len(data), size=batch_size)
         batch = data[idx]
-        states = np.stack(batch[:,0])
-        x = torch.from_numpy(states)
+        nn_states, states = get_batch_states(batch)
+        x = torch.from_numpy(nn_states)
         p_pred, v_pred = self.model(x)
         p_gt, v_gt = batch[:,1], np.stack(batch[:,2])
         loss = self.loss(states, (p_pred, v_pred), (p_gt, v_gt))
@@ -40,8 +51,11 @@ class NeuralNetwork():
     # Given a single state s, does inference to produce a distribution of valid moves P and a value V.
     def predict(self, s):
         self.model.eval()
-        input_s = np.array([s])
         with torch.no_grad():
+            if isinstance(s, VortexBoard):
+                input_s = np.expand_dims(s.nn_attr(), axis=0)
+            else:
+                input_s = np.array([s])
             input_s = torch.from_numpy(input_s)
             p_logits, v = self.model(input_s)
             p, v = self.get_valid_dist(s, p_logits[0]).cpu().numpy().squeeze(), v.cpu().numpy().squeeze() # EXP because log softmax
