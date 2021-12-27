@@ -6,7 +6,7 @@ from games.hex.vortex_board import VortexBoard
 def get_batch_states(batch):
     states = np.stack(batch[:,0])
     if isinstance(batch[0][0], VortexBoard):
-        nn_states = [s.nn_attr() for s in states]
+        nn_states = [s.nn_attr for s in states]
         nn_states = np.stack(nn_states)
     else:
         nn_states = states
@@ -53,7 +53,7 @@ class NeuralNetwork():
         self.model.eval()
         with torch.no_grad():
             if isinstance(s, VortexBoard):
-                input_s = np.expand_dims(s.nn_attr(), axis=0)
+                input_s = np.expand_dims(s.nn_attr, axis=0)
             else:
                 input_s = np.array([s])
             input_s = torch.from_numpy(input_s)

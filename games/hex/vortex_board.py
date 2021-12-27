@@ -72,6 +72,14 @@ class VortexBoard():
         }
         self.n_steps = n_steps
         self.features = self.n_steps * 6
+        self._nn_attr = None
+
+
+    @property
+    def nn_attr(self):
+        if self._nn_attr is None:
+            self._nn_attr = self.get_nn_attr()
+        return self._nn_attr
 
     @property
     def shape(self):
@@ -81,6 +89,7 @@ class VortexBoard():
         p = self.get_player()
         self.node_attr[:, p] += a.astype(np.float32) # Next move
         self.node_attr[:, NEXT_PLAYER] = (self.node_attr[:, NEXT_PLAYER] + 1) % 2 # Toggle player
+        self._nn_attr = self.get_nn_attr()
 
     def get_vor_attr(self, player):
         """
@@ -123,7 +132,7 @@ class VortexBoard():
     def get_player(self):
         return int(self.node_attr[0, NEXT_PLAYER])
 
-    def nn_attr(self):
+    def get_nn_attr(self):
         """
         preprocess the attributes for the neural network
 
