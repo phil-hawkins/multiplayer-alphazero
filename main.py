@@ -8,7 +8,7 @@ from models.vornet import VorNet
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from games.connect3x3 import Connect3x3
-from games.vortex import Vortex, Vortex7, Vortex11
+from games.vortex import Vortex_5_10, Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20
 from neural_network import NeuralNetwork
 from trainer import Trainer
 from experiments import evaluate_against_uninformed
@@ -43,6 +43,11 @@ else:
         print("Please delete the existing checkpoints for this game+model combination, or change resume flag to True.")
         quit()
     iteration = 0
+    if "curriculum_checkpoint" in config:
+        chk_iteration, chk_dir = config["curriculum_checkpoint"], config["curriculum_checkpoint_dir"]
+        if config["verbose"]: 
+            print("Continuing curriculum training from iteration {} ({}):".format(chk_iteration, chk_dir))
+        nn.load(chk_iteration, directory=chk_dir)
 
 # Training loop
 while True:

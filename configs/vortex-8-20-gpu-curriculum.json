@@ -1,9 +1,9 @@
 {
-    "game": "Vortex7",
+    "game": "Vortex_8_20",
     "model": "VorNet",
     "ckpt_frequency": 1,
     "num_updates": 1000,
-    "num_games": 20,
+    "num_games": 30,
     "weight_decay": 1e-4,
     "lr": 1e-3,
     "cpuct": 3,
@@ -12,6 +12,8 @@
     "num_threads": 1,
     "cuda": true,
     "verbose": true,
-    "resume": true,
+    "resume": false,
+    "curriculum_checkpoint_dir": "./checkpoints/Vortex_7_20-VorNet",
+    "curriculum_checkpoint": 10,
     "buffer_size_limit": 500000
 }

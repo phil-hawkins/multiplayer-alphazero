@@ -1,17 +1,17 @@
 {
-    "game": "Vortex7",
+    "game": "Vortex_5_10",
     "model": "VorNet",
     "ckpt_frequency": 1,
     "num_updates": 1000,
-    "num_games": 20,
+    "num_games": 30,
     "weight_decay": 1e-4,
     "lr": 1e-3,
     "cpuct": 3,
-    "num_simulations": 100,
+    "num_simulations": 50,
     "batch_size": 64,
     "num_threads": 1,
     "cuda": true,
     "verbose": true,
-    "resume": true,
+    "resume": false,
     "buffer_size_limit": 500000
 }

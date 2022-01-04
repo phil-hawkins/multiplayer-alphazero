@@ -222,7 +222,7 @@ class GraphHexBoard():
 
         fig.canvas.mpl_connect('pick_event', self.on_pick_node)
 
-        ax.triplot(self.tri.points[:, 0], self.tri.points[:, 1], self.tri.simplices)
+        ax.triplot(self.tri.points[:, 0], self.tri.points[:, 1], self.tri.simplices, line_colors='gray')
         ax.plot(self.tri.points[:, 0], self.tri.points[:, 1], 'o')
         if self.x is not None:
             for n, p in enumerate(self.tri.points):

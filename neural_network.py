@@ -2,16 +2,8 @@ import torch
 import numpy as np
 import os
 from games.hex.vortex_board import VortexBoard
+from games.vortex import Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20
 
-def get_batch_states(batch):
-    states = np.stack(batch[:,0])
-    if isinstance(batch[0][0], VortexBoard):
-        nn_states = [s.nn_attr for s in states]
-        nn_states = np.stack(nn_states)
-    else:
-        nn_states = states
-        
-    return nn_states, states
 
 # Object that manages interfacing data with the underlying PyTorch model, as well as checkpointing models.
 class NeuralNetwork():
@@ -30,6 +22,21 @@ class NeuralNetwork():
         if len(list(self.model.parameters())) > 0:
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
 
+        ## get the means and stds for the neural net input attributes
+        self.means = np.load('./checkpoints/means_20.npy')
+        self.stds = np.load('./checkpoints/stds_20.npy')
+
+    def get_batch_states(self, batch):
+        states = np.stack(batch[:,0])
+        if isinstance(batch[0][0], VortexBoard):
+            nn_states = [s.nn_attr for s in states]
+            nn_states = np.stack(nn_states)
+            nn_states -= self.means
+            nn_states /= self.stds
+        else:
+            nn_states = states
+            
+        return nn_states, states
 
     # Incoming data is a numpy array containing (state, prob, outcome) tuples.
     def train(self, data):
@@ -37,7 +44,7 @@ class NeuralNetwork():
         batch_size=self.batch_size
         idx = np.random.randint(len(data), size=batch_size)
         batch = data[idx]
-        nn_states, states = get_batch_states(batch)
+        nn_states, states = self.get_batch_states(batch)
         x = torch.from_numpy(nn_states)
         p_pred, v_pred = self.model(x)
         p_gt, v_gt = batch[:,1], np.stack(batch[:,2])
@@ -54,6 +61,8 @@ class NeuralNetwork():
         with torch.no_grad():
             if isinstance(s, VortexBoard):
                 input_s = np.expand_dims(s.nn_attr, axis=0)
+                input_s -= self.means
+                input_s /= self.stds
             else:
                 input_s = np.array([s])
             input_s = torch.from_numpy(input_s)
@@ -116,9 +125,10 @@ class NeuralNetwork():
 
     # Loads the network at the given name.
     # Optionally, also load and return the training data and training error history.
-    def load(self, name, load_supplementary_data=False):
+    def load(self, name, load_supplementary_data=False, directory=None):
         network_name = self.model.module.__class__.__name__ if self.cuda else self.model.__class__.__name__
-        directory = "checkpoints/{}-{}".format(self.game.__class__.__name__, network_name)
+        if directory is None:
+            directory = "checkpoints/{}-{}".format(self.game.__class__.__name__, network_name)
         network_path = "{}/{}.ckpt".format(directory, name)
         network_checkpoint = torch.load(network_path)
         self.model.load_state_dict(network_checkpoint['model_state_dict'])
