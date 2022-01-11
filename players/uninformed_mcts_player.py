@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 sys.path.append("..")
-from mcts import MCTS
+from mcts import MCTS, RolloutMCTS
 from player import Player
 from models.dumbnet import DumbNet
 from neural_network import NeuralNetwork
@@ -27,3 +27,13 @@ class UninformedMCTSPlayer(Player):
 
     def reset(self):
         self.tree = MCTS(self.game, NeuralNetwork(self.game, DumbNet))
+
+
+class RolloutMCTSPlayer(UninformedMCTSPlayer):
+    def __init__(self, game, simulations):
+        self.game = game
+        self.simulations = simulations
+        self.tree = RolloutMCTS(game)
+
+    def reset(self):
+        self.tree = RolloutMCTS(self.game)

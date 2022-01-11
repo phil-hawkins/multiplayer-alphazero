@@ -1,6 +1,6 @@
 {
-    "game": "Vortex_5_20",
-    "model": "VorNet",
+    "game": "Vortex_5_20_edge_weights",
+    "model": "VorNetBN3",
     "ckpt_frequency": 1,
     "num_updates": 10000,
     "num_games": 30,
@@ -12,6 +12,6 @@
     "num_threads": 1,
     "cuda": true,
     "verbose": true,
-    "resume": true,
+    "resume": false,
     "buffer_size_limit": 50000
 }

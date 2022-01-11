@@ -61,6 +61,10 @@ class Vortex_5_20(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=5, n_steps=20)
 
+class Vortex_5_20_edge_weights(Vortex):
+    def get_initial_state(self):
+        return vb.VortexBoard.new_vortex_board(size=5, n_steps=20, use_edge_weight=True)
+
 class Vortex_6_20(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=6, n_steps=20)
@@ -76,3 +80,11 @@ class Vortex_8_20(Vortex):
 class Vortex_9_20(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=9, n_steps=20)
+
+class Vortex_9_20_NoPT(Vortex):
+    def get_initial_state(self):
+        return vb.VortexBoard.new_vortex_board(size=9, n_steps=20)
+
+class Vortex_5_mctspt(Vortex):
+    def get_initial_state(self):
+        return vb.VortexBoard.new_vortex_board(size=5, n_steps=20, use_edge_weight=True)

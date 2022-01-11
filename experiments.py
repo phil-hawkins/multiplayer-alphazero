@@ -7,7 +7,7 @@ from neural_network import NeuralNetwork
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from players.deep_mcts_player import DeepMCTSPlayer
-from players.uninformed_mcts_player import UninformedMCTSPlayer
+from players.uninformed_mcts_player import UninformedMCTSPlayer, RolloutMCTSPlayer
 from play import play_match
 
 
@@ -21,6 +21,16 @@ def evaluate_against_uninformed(checkpoint, game, model_class, my_sims, opponent
     scores = play_match(game, [informed] + uninformeds, permute=True)
     print("Opponent strength: {}     Scores: {}".format(opponent_sims, scores))
 
+
+# Evaluate the outcome of playing a checkpoint against an uninformed MCTS agent
+def evaluate_against_mcts(checkpoint, game, model_class, my_sims, opponent_sims, cuda=False):
+    my_model = NeuralNetwork(game, model_class, cuda=cuda)
+    my_model.load(checkpoint)
+    num_opponents = game.get_num_players() - 1
+    uninformeds = [RolloutMCTSPlayer(game, opponent_sims) for _ in range(num_opponents)]
+    informed = DeepMCTSPlayer(game, my_model, my_sims)
+    scores = play_match(game, [informed] + uninformeds, permute=True)
+    print("Opponent strength: {}     Scores: {}".format(opponent_sims, scores))
 
 # Tracks the current best checkpoint across all checkpoints
 def rank_checkpoints(game, model_class, sims, cuda=False):

@@ -4,14 +4,14 @@ import numpy as np
 
 from models.senet import SENet
 from models.senetbig import SENetBig
-from models.vornet import VorNet
+from models.vornet import VorNet, VorNetBN, VorNetBN3
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from games.connect3x3 import Connect3x3
-from games.vortex import Vortex_5_10, Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20
+from games.vortex import Vortex_5_10, Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20, Vortex_9_20_NoPT, Vortex_5_20_edge_weights
 from neural_network import NeuralNetwork
 from trainer import Trainer
-from experiments import evaluate_against_uninformed
+from experiments import evaluate_against_uninformed, evaluate_against_mcts
 
 
 # Load in a run configuration
@@ -38,6 +38,7 @@ if config["resume"]:
         quit()
     iteration = int(checkpoints[-1])
     trainer.training_data, trainer.error_log = nn.load(iteration, load_supplementary_data=True)
+    #nn.load(iteration)
 else:
     if len(checkpoints) != 0:
         print("Please delete the existing checkpoints for this game+model combination, or change resume flag to True.")
@@ -65,5 +66,5 @@ while True:
     # Evaluate how the current checkpoint performs against MCTS agents of increasing strength
     # that do no use a heursitic.
     for opponent_strength in [10, 20, 40, 80, 160, 320, 640, 1280]:
-        evaluate_against_uninformed(checkpoint=iteration, game=game, model_class=model_class,
+        evaluate_against_mcts(checkpoint=iteration, game=game, model_class=model_class,
             my_sims=sims, opponent_sims=opponent_strength, cuda=cuda)

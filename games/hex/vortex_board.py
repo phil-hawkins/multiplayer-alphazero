@@ -12,6 +12,7 @@ from torch_geometric.utils import get_laplacian
 
 HORIZONTAL_PLAYER = 0
 VERTICAL_PLAYER = 1
+EMPTY = -1
 NEXT_PLAYER = 2
 POINT_X = 3
 POINT_Y = 4
@@ -20,47 +21,59 @@ N_STEPS = 10
 
 WinState = namedtuple('WinState', ['is_ended', 'winner'])
 
-def merge_nodes(nodes, edge_index):
+def merge_nodes(merge_nodes, player_nodes, edge_index):
     """
     merge nodes by redirecting any connected edges, only the edges are changed
     """
-    # sort the nodes descending so that the side nodes are removed last
-    list.sort(nodes, reverse=True)
-    merged = set()
+    m_nodes = merge_nodes.copy()
 
-    for node in nodes:
-        if node not in merged:
-            # get edges going out from the node
+    while m_nodes:
+        node = m_nodes.pop()
+        #if node not in merged:
+        # get edges going out from the node
+        c1_out_mask = (edge_index[0] == node)
+        if c1_out_mask.any():
+            # get connected nodes filled by same player
+            c1_nodes = edge_index[1, c1_out_mask]
+            c1_nodes = c1_nodes[np.in1d(c1_nodes, player_nodes)]
+
+            # get all edges in and out of these nodes
+            out_edge_mask = np.in1d(edge_index[0], c1_nodes)
+            in_edge_mask = np.in1d(edge_index[1], c1_nodes)
+
+            # form new edges to 2-hop adjacent nodes that are not filled by player
+            c2_nodes = np.unique(edge_index[1, out_edge_mask])
+            c2_nodes = c2_nodes[c2_nodes != node]
+            #c2_nodes = c2_nodes[~np.in1d(c2_nodes, nodes)]
+            new_edges = np.stack([c2_nodes, np.full_like(c2_nodes, node)])
+
+            # print('Node: ', node)
+            # print('Connected nodes: ', c1_nodes)
+            # print('Remaining edges', edge_index[:, ~(out_edge_mask|in_edge_mask)].T)
+            # print('New edges', new_edges.T)
+
+            # remove all edges from merged nodes and add new edges
+            edge_index = np.concatenate([
+                edge_index[:, ~(out_edge_mask|in_edge_mask)],
+                new_edges,
+                new_edges[[1,0]]
+            ], axis=1)
+            edge_index = np.unique(edge_index, axis=1)
+            
+            # return the node to the queue if it is still connected
             c1_out_mask = (edge_index[0] == node)
             if c1_out_mask.any():
                 # get connected nodes filled by same player
                 c1_nodes = edge_index[1, c1_out_mask]
-                c1_nodes = c1_nodes[np.in1d(c1_nodes, nodes)]
-
-                # get all edges in and out of these nodes
-                out_edge_mask = np.in1d(edge_index[0], c1_nodes)
-                in_edge_mask = np.in1d(edge_index[1], c1_nodes)
-
-                # form new edges to 2-hop adjacent nodes that are not filled by player
-                c2_nodes = np.unique(edge_index[1, out_edge_mask])
-                c2_nodes = c2_nodes[~np.in1d(c2_nodes, nodes)]
-                new_edges = np.stack([c2_nodes, np.full_like(c2_nodes, node)])
-
-                # remove all edges from merged nodes and add new edges
-                edge_index = np.concatenate([
-                    edge_index[:, ~(out_edge_mask|in_edge_mask)],
-                    new_edges,
-                    new_edges[[1,0]]
-                ], axis=1)
-
-                # update the visited set
-                merged.update(list(c1_nodes))
+                c1_nodes = c1_nodes[np.in1d(c1_nodes, player_nodes)]
+                if not c1_nodes.size == 0:
+                    m_nodes.append(node)
 
     return edge_index
 
 class VortexBoard():
 
-    def __init__(self, edge_index, node_attr, n_steps):
+    def __init__(self, edge_index, node_attr, n_steps, use_edge_weight):
         self.edge_index = edge_index
         self.node_attr = node_attr
         self.node_count = self.node_attr.shape[0]
@@ -73,6 +86,7 @@ class VortexBoard():
         self.n_steps = n_steps
         self.features = self.n_steps * 6
         self._nn_attr = None
+        self.use_edge_weight = use_edge_weight
 
     @property
     def nn_attr(self):
@@ -85,6 +99,33 @@ class VortexBoard():
     @property
     def shape(self):
         return self.node_count, self.features
+
+    def set_stone(self, node_ndx, player):
+        """
+        Sets a stone at the given node index for the given player
+        """
+        assert self.node_attr[node_ndx, :2].sum() == 0.
+        assert player == HORIZONTAL_PLAYER or player == VERTICAL_PLAYER
+
+        self.node_attr[node_ndx, player] = 1.
+
+        assert self.node_attr[node_ndx, :2].sum() == 1.
+
+    def get_node_state(self, node_ndx):
+        """ 
+        Gets the state of a node ie. which player has a stome on it
+        """
+        if self.node_attr[node_ndx, HORIZONTAL_PLAYER]:
+            return HORIZONTAL_PLAYER
+        elif self.node_attr[node_ndx, VERTICAL_PLAYER]:
+            return VERTICAL_PLAYER
+        else:
+            return EMPTY
+
+    def move(self, node_ndx):
+        p = self.get_player()
+        self.set_stone(node_ndx, p)
+        self.node_attr[:, NEXT_PLAYER] = (self.node_attr[:, NEXT_PLAYER] + 1) % 2 # Toggle player
 
     def take_action(self, a):
         p = self.get_player()
@@ -113,8 +154,11 @@ class VortexBoard():
         # set the stones
         v_attr = np.zeros((self.node_count, 3))
         v_attr[:, 2] = self.node_attr[:, us]
-        v_attr[s1] = np.array([1., 0, 0])
-        v_attr[s2] = np.array([0, 1., 0])
+        #v_attr[s1] = np.array([1., 0, 0.])
+        #v_attr[s2] = np.array([0, 1., 0.])
+        # TODO: fix this after comparison
+        v_attr[s1] = np.array([1., 0, 1.])
+        v_attr[s2] = np.array([0, 1., 1.])
 
         # remove edges to other player filled nodes
         t_mask = self.node_attr[:, them] > 0.
@@ -122,12 +166,23 @@ class VortexBoard():
         m = ~(np.in1d(self.edge_index[0], their_nodes) | np.in1d(self.edge_index[1], their_nodes))
         v_edge_index = self.edge_index[:, m]
 
-        # merge this player's connected nodes
+        # merge this player's connected internal nodes
+        o_mask = self.node_attr[:-4, us] > 0.
+        our_nodes = o_mask.nonzero()[0].tolist()
+        v_edge_index = merge_nodes(our_nodes, our_nodes, v_edge_index)
+        # merge this player's side nodes to remaining internal nodes
         o_mask = self.node_attr[:, us] > 0.
-        our_nodes = list(o_mask.nonzero()[0])
-        v_edge_index = merge_nodes(our_nodes, v_edge_index)
+        all_our_nodes = o_mask.nonzero()[0] # our nodes including sides
+        o_mask[:-4] = False
+        side_nodes = o_mask.nonzero()[0].tolist()
+        v_edge_index = merge_nodes(side_nodes, our_nodes, v_edge_index)
 
-        return v_attr, v_edge_index
+        # edges have weight 1. if both connected nodes are empty or 2. if they connect to one of our nodes
+        v_edge_weight = np.ones_like(v_edge_index[0], dtype=np.float32)
+        m = (np.in1d(v_edge_index[0], all_our_nodes) | np.in1d(v_edge_index[1], all_our_nodes))
+        v_edge_weight[m] = 2.
+
+        return v_attr, v_edge_index, v_edge_weight
 
     def get_player(self):
         return int(self.node_attr[0, NEXT_PLAYER])
@@ -140,9 +195,17 @@ class VortexBoard():
         """
         current_player = self.get_player()
         steps = []
+        # do message passing and concatenate the timesteps
+        # first n_steps x 3 layers are the current player
+        # next n_steps x 3 layers are the other player
         for p in [current_player, (current_player+1)%2]:
-            v_attr, v_edge_index = self.get_vor_attr(p)
-            L = get_laplacian(torch.tensor(v_edge_index), normalization='sym', num_nodes=self.node_count)
+            v_attr, v_edge_index, v_edge_weight = self.get_vor_attr(p)
+            L = get_laplacian(
+                edge_index=torch.tensor(v_edge_index), 
+                edge_weight=torch.tensor(v_edge_weight) if self.use_edge_weight else None, 
+                normalization='sym', 
+                num_nodes=self.node_count
+            )
             L = torch.sparse_coo_tensor(L[0], L[1])
             v_attr = torch.tensor(v_attr, dtype=torch.float32)
 
@@ -152,8 +215,15 @@ class VortexBoard():
                     v_attr = L @ v_attr
 
         x = np.concatenate(steps, axis=1)
-
-        return x
+        # reverse the side node order for the horizontal player so that the first two side nodes are
+        # always those of the current player, and the last two are those of the other player
+        x1 = x.copy()
+        if current_player == HORIZONTAL_PLAYER:
+            x1[-4] = x[-2]
+            x1[-3] = x[-1]
+            x1[-2] = x[-4]
+            x1[-1] = x[-3]
+        return x1
 
     def get_available_actions(self):
         return ~((self.node_attr[:, HORIZONTAL_PLAYER] > 0.) | (self.node_attr[:, VERTICAL_PLAYER] > 0.))
@@ -162,7 +232,7 @@ class VortexBoard():
         return self.node_attr[:, :NEXT_PLAYER+1].tobytes()
    
     def copy(self):
-        return VortexBoard(self.edge_index.copy(), self.node_attr.copy(), n_steps=self.n_steps)
+        return VortexBoard(self.edge_index.copy(), self.node_attr.copy(), n_steps=self.n_steps, use_edge_weight=self.use_edge_weight)
 
     def check_game_over(self):
         """ checks whether HORIZONTAL_PLAYER has made a left-right connection or
@@ -203,7 +273,7 @@ class VortexBoard():
         print(self.node_attr)
 
     @classmethod
-    def new_vortex_board(cls, size, n_steps=10):
+    def new_vortex_board(cls, size, n_steps=10, use_edge_weight=False):
         """ construct a new empty vortex board with approximately the same complexity
         as a hex board of size: size
 
@@ -254,6 +324,12 @@ class VortexBoard():
         node_attr[tnode_ndx["right"], HORIZONTAL_PLAYER] = 1.
 
         node_attr[:points.shape[0], POINT_X:] = points
+        node_attr[-4:, POINT_X:] = np.array([
+            [0.5, 1.2],
+            [0.5, -0.2],
+            [-0.2, 0.5],
+            [1.2, 0.5]
+        ])
 
         # build the adjacency matrix for the graph
         tri = Delaunay(points)
@@ -287,7 +363,7 @@ class VortexBoard():
         edge_index = add_edges(edge_index, tnode_ndx["left"], left_border_ndx)
         edge_index = add_edges(edge_index, tnode_ndx["right"], right_border_ndx)
         
-        return cls(edge_index, node_attr, n_steps)
+        return cls(edge_index, node_attr, n_steps, use_edge_weight)
 
 
 

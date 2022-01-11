@@ -1,6 +1,6 @@
 {
-    "game": "Vortex_5_20",
-    "model": "VorNet",
+    "game": "Vortex_5_mctspt",
+    "model": "VorNetBN",
     "ckpt_frequency": 1,
     "num_updates": 10000,
     "num_games": 30,

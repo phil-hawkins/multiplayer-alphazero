@@ -2,6 +2,9 @@ import time
 import numpy as np
 from tqdm import trange
 from multiprocessing.dummy import Pool as ThreadPool
+import torch
+from torch.utils.tensorboard import SummaryWriter
+
 from mcts import MCTS, RolloutMCTS
 from play import play_match
 from players.uninformed_mcts_player import UninformedMCTSPlayer
@@ -98,22 +101,26 @@ class Trainer:
         if self.buffer_size_limit is not None:
             self.training_data = self.training_data[-self.buffer_size_limit:,:]
 
+        log_dir = "checkpoints/{}-{}/logs/mcts_init".format(self.nn.game.__class__.__name__, self.nn.model.module.__class__.__name__)
+        writer = SummaryWriter(log_dir=log_dir)
         if verbose:
             print("TRAINING")
             start = time.time()
         mean_loss = None
-        count = 0
-        with trange(self.num_updates) as t:
-            for _ in t:
-                self.nn.train(self.training_data)
+        batch_size = self.nn.batch_size
+        data_idx = np.arange(self.num_updates*batch_size) % len(self.training_data)
+        np.random.shuffle(data_idx)
+
+        with trange(self.num_updates) as steps:
+            for step in steps:
+                batch_idx = data_idx[step*batch_size:(step+1)*batch_size]
+                batch = self.training_data[batch_idx]
+                self.nn.train_step(batch, writer, step)
                 new_loss = self.nn.latest_loss.item()
-                if mean_loss is None:
-                    mean_loss = new_loss
-                else:
-                    mean_loss = (mean_loss*count + new_loss)/(count+1)
-                count += 1
-                t.set_postfix(loss=new_loss, mean_loss=mean_loss)
+                mean_loss = new_loss if mean_loss is None else (mean_loss*step + new_loss)/(step+1)
+                steps.set_postfix(loss=new_loss, mean_loss=mean_loss)
         self.error_log.append(mean_loss)
+        writer.close()
 
         if verbose:
             print("Training took " + str(int(time.time()-start)) + " seconds")
