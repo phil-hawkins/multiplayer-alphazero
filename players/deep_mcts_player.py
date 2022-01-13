@@ -11,10 +11,13 @@ class DeepMCTSPlayer(Player):
         self.simulations = simulations
         self.nn = nn
         self.tree = MCTS(game, nn)
+        self.debug_stats = []
 
     def update_state(self, s):
+        self.tree.debug_stats = []
         for _ in range(self.simulations):
             self.tree.simulate(s)
+        self.debug_stats.append(self.tree.debug_stats)
 
         dist = self.tree.get_distribution(s, 0)
         a = tuple(dist[np.argmax(dist[:,1]),0])

@@ -88,3 +88,7 @@ class Vortex_9_20_NoPT(Vortex):
 class Vortex_5_mctspt(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=5, n_steps=20, use_edge_weight=True)
+
+class Vortex_4(Vortex):
+    def get_initial_state(self):
+        return vb.VortexBoard.new_vortex_board(size=4, n_steps=20, use_edge_weight=True)

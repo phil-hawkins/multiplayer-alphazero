@@ -154,9 +154,6 @@ class VortexBoard():
         # set the stones
         v_attr = np.zeros((self.node_count, 3))
         v_attr[:, 2] = self.node_attr[:, us]
-        #v_attr[s1] = np.array([1., 0, 0.])
-        #v_attr[s2] = np.array([0, 1., 0.])
-        # TODO: fix this after comparison
         v_attr[s1] = np.array([1., 0, 1.])
         v_attr[s2] = np.array([0, 1., 1.])
 

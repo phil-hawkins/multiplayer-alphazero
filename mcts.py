@@ -16,6 +16,7 @@ class MCTS():
         self.game = game
         self.nn = nn
         self.tree = {}
+        self.debug_stats = []
 
     # Produces a hash-friendly representation of an ndarray.
     # This is used to index nodes in the accumulated Monte Carlo tree.
@@ -27,7 +28,7 @@ class MCTS():
     # The epsilon fix prevents the U term from being 0 when unexplored (N=0).
     # With the fix, priors (P) can be factored in immediately during selection and expansion.
     # This makes the search more efficient, given there are strong priors.
-    def simulate(self, s, cpuct=1, epsilon_fix=True):
+    def simulate(self, s, cpuct=1, epsilon_fix=True, level=0):
         hashed_s = self.np_hash(s) # Key for state in dictionary
         current_player = self.game.get_player(s)
         if hashed_s in self.tree: # Not at leaf; select.
@@ -40,7 +41,7 @@ class MCTS():
             template = np.zeros_like(self.game.get_available_actions(s)) # Submit action to get s'
             template[tuple(best_a)] = True
             s_prime = self.game.take_action(s, template)
-            scores = self.simulate(s_prime) # Forward simulate with this action
+            scores = self.simulate(s_prime, level=level+1) # Forward simulate with this action
             n, q = N[best_a_idx], Q[best_a_idx]
             v = scores[current_player] # Index in to find our reward
             stats[best_a_idx, 2] = (n*q+v)/(n + 1)
@@ -49,6 +50,7 @@ class MCTS():
 
         else: # Expand
             scores = self.game.check_game_over(s)
+            self.debug_stats.append((level, scores))
             if scores is not None: # Reached a terminal node
                 return scores
             available_actions = self.game.get_available_actions(s)
@@ -95,7 +97,7 @@ class RolloutMCTS(MCTS):
     # The epsilon fix prevents the U term from being 0 when unexplored (N=0).
     # With the fix, priors (P) can be factored in immediately during selection and expansion.
     # This makes the search more efficient, given there are strong priors.
-    def simulate(self, s, cpuct=1, epsilon_fix=True):
+    def simulate(self, s, cpuct=1, epsilon_fix=True, level=0):
         hashed_s = self.np_hash(s) # Key for state in dictionary
         current_player = self.game.get_player(s)
         if hashed_s in self.tree: # Not at leaf; select.
@@ -108,7 +110,7 @@ class RolloutMCTS(MCTS):
             template = np.zeros_like(self.game.get_available_actions(s)) # Submit action to get s'
             template[tuple(best_a)] = True
             s_prime = self.game.take_action(s, template)
-            scores = self.simulate(s_prime) # Forward simulate with this action
+            scores = self.simulate(s_prime, level=level+1) # Forward simulate with this action
             n, q = N[best_a_idx], Q[best_a_idx]
             v = scores[current_player] # Index in to find our reward
             stats[best_a_idx, 2] = (n*q+v)/(n + 1)

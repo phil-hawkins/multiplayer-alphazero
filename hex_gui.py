@@ -8,16 +8,16 @@ import games.hex.vortex_board as vb
 from neural_network import NeuralNetwork
 from players.uninformed_mcts_player import UninformedMCTSPlayer, RolloutMCTSPlayer
 from players.deep_mcts_player import DeepMCTSPlayer
-from games.vortex import Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20, Vortex_5_20_edge_weights
-from models.vornet import VorNet, VorNetBN
+from games.vortex import Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20, Vortex_5_20_edge_weights, Vortex_4, Vortex_5_mctspt
+from models.vornet import VorNet, VorNetBN, VorNetBN3
 
 HCOLOUR = (225, 30, 30)
 VCOLOUR = (30, 30, 255)
 NODE_UI_WIDTH = 30
 UI_PLAYER = vb.HORIZONTAL_PLAYER
 AI_PLAYER = vb.VERTICAL_PLAYER
-MCTS_SIMS = 1280
-CHECKPOINT = 10
+MCTS_SIMS = 500
+CHECKPOINT = 0
 
 class NodeUI(WidgetBase):
     def __init__(self, x, y, node_ndx):
@@ -103,16 +103,17 @@ class BoardPieces(EventDispatcher):
             
             if game_over is not None:
                 print("game over", game_over)
+                #print(opponent.debug_stats)
 
 BoardPieces.register_event_type('on_next_move')
 
 window = pyglet.window.Window(600, 600)
 window.set_caption('Vortex')
-game = Vortex_5_20_edge_weights()
+game = Vortex_5_mctspt()
 nn = NeuralNetwork(game, VorNetBN, cuda=True)
 nn.load(CHECKPOINT)
 opponent = DeepMCTSPlayer(game, nn, simulations=MCTS_SIMS)
-#opponent = RolloutMCTSPlayer(game, MCTS_SIMS)
+# opponent = RolloutMCTSPlayer(game, MCTS_SIMS)
 board = game.get_initial_state()
 board_pieces = BoardPieces(board, window)
 

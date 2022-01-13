@@ -1,3 +1,6 @@
 __pycache__/
 checkpoints/**
 .vscode/launch.json
+models/vornet.py.bak
+notebooks/scratch.ipynb
+notebooks/vortex_experiments_old.ipynb
