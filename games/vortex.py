@@ -45,50 +45,26 @@ class Vortex(Game):
     def visualize(self, s):
         s.print_board_str()
 
-class Vortex7(Vortex):
-    def get_initial_state(self):
-        return vb.VortexBoard.new_vortex_board(size=7, n_steps=14)
-
-class Vortex11(Vortex):
-    def get_initial_state(self):
-        return vb.VortexBoard.new_vortex_board(size=11, n_steps=22)
-
-class Vortex_5_10(Vortex):
-    def get_initial_state(self):
-        return vb.VortexBoard.new_vortex_board(size=5, n_steps=10)
-
-class Vortex_5_20(Vortex):
+class Vortex_5(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=5, n_steps=20)
 
-class Vortex_5_20_edge_weights(Vortex):
-    def get_initial_state(self):
-        return vb.VortexBoard.new_vortex_board(size=5, n_steps=20, use_edge_weight=True)
-
-class Vortex_6_20(Vortex):
+class Vortex_6(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=6, n_steps=20)
 
-class Vortex_7_20(Vortex):
+class Vortex_7(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=7, n_steps=20)
 
-class Vortex_8_20(Vortex):
+class Vortex_8(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=8, n_steps=20)
 
-class Vortex_9_20(Vortex):
+class Vortex_9(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=9, n_steps=20)
 
-class Vortex_9_20_NoPT(Vortex):
+class Vortex_9_NoPT(Vortex):
     def get_initial_state(self):
         return vb.VortexBoard.new_vortex_board(size=9, n_steps=20)
-
-class Vortex_5_mctspt(Vortex):
-    def get_initial_state(self):
-        return vb.VortexBoard.new_vortex_board(size=5, n_steps=20, use_edge_weight=True)
-
-class Vortex_4(Vortex):
-    def get_initial_state(self):
-        return vb.VortexBoard.new_vortex_board(size=4, n_steps=20, use_edge_weight=True)

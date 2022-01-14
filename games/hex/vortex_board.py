@@ -270,7 +270,7 @@ class VortexBoard():
         print(self.node_attr)
 
     @classmethod
-    def new_vortex_board(cls, size, n_steps=10, use_edge_weight=False):
+    def new_vortex_board(cls, size, n_steps=10, use_edge_weight=True):
         """ construct a new empty vortex board with approximately the same complexity
         as a hex board of size: size
 

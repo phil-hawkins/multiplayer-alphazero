@@ -1,18 +1,21 @@
-from torch.nn import Module, Linear, BatchNorm1d, ReLU, ModuleList, Dropout
+from torch.nn import Module, Linear, BatchNorm1d, ReLU, ModuleList, ReLU6
 
 class MLP(Module):
-    def __init__(self, in_features, hidden_dims, hidden_layers, out_features, dropout):
+    def __init__(self, in_features, layer0_dims, hidden_dims, hidden_layers, out_features):
         super().__init__()
         self._mlist = ModuleList([
-            Linear(in_features, hidden_dims),
+            Linear(in_features, layer0_dims),
+            BatchNorm1d(layer0_dims),
             ReLU()
         ])
-        for _ in range(hidden_layers):
-            self._mlist.append(Linear(hidden_dims, hidden_dims))
+
+        in_dim = layer0_dims        
+        for i in range(hidden_layers):
+            self._mlist.append(Linear(in_dim, hidden_dims))
             self._mlist.append(BatchNorm1d(hidden_dims))
             self._mlist.append(ReLU())
-            self._mlist.append(Dropout(p=dropout))
-        self._mlist.append(Linear(hidden_dims, out_features))
+            in_dim = hidden_dims
+        self._mlist.append(Linear(in_dim, out_features))
 
     def forward(self, x):
         for layer in self._mlist:
@@ -21,26 +24,26 @@ class MLP(Module):
 
     @classmethod
     def policy_head(cls, in_features):
-        return cls(in_features, 512, 10, 1, 0.1)
+        return cls(in_features, 250, 250, 3, 1)
 
     @classmethod
     def value_head(cls, in_features):
-        return cls(in_features, 512, 10, 2, 0.1)
+        return cls(in_features, 1000, 250, 3, 2)
 
 class VorNet(Module):
     def __init__(self, input_shape, p_shape, v_shape):
         super(VorNet, self).__init__()
         self.p_shape = p_shape
-        assert v_shape == 2
+        assert v_shape[0] == 2
         B, F = input_shape
 
         self.input_bn = BatchNorm1d(F)
-        self.policy_head = MLP(F)
-        self.value_head = MLP(4*F)
+        self.policy_head = MLP.policy_head(F)
+        self.value_head = MLP.value_head(4*F)
 
     def forward(self, x):
         B, N, F = x.shape
-        assert N == self.p_shape
+        assert N == self.p_shape[0]
 
         x = self.input_bn(x.view(B*N, F)).view(B, N, F)
 

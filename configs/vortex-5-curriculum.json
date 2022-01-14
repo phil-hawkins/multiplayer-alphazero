@@ -1,0 +1,19 @@
+{
+    "game": "Vortex_5",
+    "model": "VorNet",
+    "ckpt_frequency": 1,
+    "num_updates": 1000,
+    "num_games": 100,
+    "weight_decay": 5e-5,
+    "lr": 1e-4,
+    "cpuct": 3,
+    "num_simulations": 100,
+    "batch_size": 256,
+    "num_threads": 1,
+    "cuda": true,
+    "verbose": true,
+    "resume": true,
+    "curriculum_checkpoint_dir": "./checkpoints/train_ex",
+    "curriculum_checkpoint": 0,
+    "buffer_size_limit": 500000
+}

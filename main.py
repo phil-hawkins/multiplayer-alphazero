@@ -1,14 +1,15 @@
 import json
 import sys
 import numpy as np
+from time import time
 
 from models.senet import SENet
 from models.senetbig import SENetBig
-from models.vornet import VorNet, VorNetBN, VorNetBN3
+from models.vornet import VorNet
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from games.connect3x3 import Connect3x3
-from games.vortex import Vortex_5_10, Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20, Vortex_9_20_NoPT, Vortex_5_20_edge_weights
+from games.vortex import Vortex_5
 from neural_network import NeuralNetwork
 from trainer import Trainer
 from experiments import evaluate_against_uninformed, evaluate_against_mcts
@@ -51,20 +52,40 @@ else:
         nn.load(chk_iteration, directory=chk_dir)
 
 # Training loop
+i = 0
+report_frequncy = 10
+results = {}
 while True:
-
+    tic = time()
     # Run multiple policy iterations to develop a checkpoint.
     for _ in range(config["ckpt_frequency"]):
         if config["verbose"]: print("Iteration:",iteration)
         trainer.policy_iteration(verbose=config["verbose"]) # One iteration of PI
         iteration += 1
         if config["verbose"]: print("Training examples:", len(trainer.training_data))
-    
+    toc = time()
+
     # Save checkpoint
-    nn.save(name=iteration, training_data=trainer.training_data, error_log=trainer.error_log)
+    nn.save(name=iteration, training_data=trainer.training_data, error_log=trainer.error_log, timing=toc-tic)
 
     # Evaluate how the current checkpoint performs against MCTS agents of increasing strength
-    # that do no use a heursitic.
-    for opponent_strength in [10, 20, 40, 80, 160, 320, 640, 1280]:
-        evaluate_against_mcts(checkpoint=iteration, game=game, model_class=model_class,
-            my_sims=sims, opponent_sims=opponent_strength, cuda=cuda)
+    for opponent_strength in [100, 200, 400, 800, 1000, 1500, 2000, 2500]:
+        scores = evaluate_against_mcts(
+            checkpoint=iteration, 
+            game=game, 
+            model_class=model_class,
+            my_sims=sims, 
+            opponent_sims=opponent_strength, 
+            cuda=cuda)
+        if opponent_strength in results:
+            results[opponent_strength] += scores
+        else:
+            results[opponent_strength] = scores
+    
+    i += 1
+    if (i % report_frequncy == 0):
+        print("Results for last {} iterations".format(report_frequncy))
+        for os in results.keys():
+            print("  Opponent strength: {}     Scores: {}".format(os, results[os]))
+        results = {}
+

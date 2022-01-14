@@ -31,6 +31,7 @@ def evaluate_against_mcts(checkpoint, game, model_class, my_sims, opponent_sims,
     informed = DeepMCTSPlayer(game, my_model, my_sims)
     scores = play_match(game, [informed] + uninformeds, permute=True)
     print("Opponent strength: {}     Scores: {}".format(opponent_sims, scores))
+    return scores
 
 # Tracks the current best checkpoint across all checkpoints
 def rank_checkpoints(game, model_class, sims, cuda=False):
