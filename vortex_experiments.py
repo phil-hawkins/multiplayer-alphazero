@@ -150,59 +150,84 @@ def experiment_2():
     )
     results_df.to_csv("./exp_results/experiment2_{}-{}.csv".format(start_time, time()))
 
+
+def experiment_3():
+    # **Evaluate performance of DeepMCTS on larger boards than the 25 node board it was trained on**
+    # 
+    # The DeepMCTS agent is run against the uniformed MCTS agent. For each board size, *match_n* matches are played.
+
+    dmcts_sim = 250
+    bmcts_sim = 250
+    board_sizes = [Vortex_5, Vortex_6, Vortex_7, Vortex_8, Vortex_9]
+    match_n = 100
+    directory = "checkpoints/Vortex_5-VorNet"
+
+    results = []
+    for Game in board_sizes:
+        board_size = Game.__name__
+        game = Game()
+        nn = NeuralNetwork(game, VorNet, cuda=True)
+        nn.load(99, directory=directory)
+
+        deep_mcts = DeepMCTSPlayer(game, nn, simulations=dmcts_sim)
+        uninformed = UninformedMCTSPlayer(game, simulations=bmcts_sim)
+        players = [deep_mcts, uninformed]
+
+        print("Board size: {}".format(board_size))
+
+        for i in range(match_n):
+            match = [board_size, i]
+            scores = play_match(game, players, verbose=False)
+            print("  match {}, score {}".format(i, scores))
+            results.append(match + scores)
+
+    player_names = [p.__class__.__name__[:-6] for p in players]
+    index = pd.MultiIndex.from_product([player_names, player_names], names=['first_player', 'score_player'])
+    df = pd.DataFrame(data=results, columns=['board_size', 'match', 'p0fp_p0win', 'p0fp_p1win', 'p1fp_p0win', 'p1fp_p1win'])
+    df = df.set_index(['board_size', 'match'])
+    df.columns = index
+    df.to_csv("./notebooks/experiment3.csv")
+
+
+
+def experiment_4():
+    # **Evaluate performance of DeepMCTS on larger boards than the 25 node board it was trained on**
+    # 
+    # The DeepMCTS agent is run against the uniformed MCTS agent. For each board size, *match_n* matches are played.
+
+    dmcts_sim = 250
+    bmcts_sim = 250
+    board_sizes = [Vortex_5, Vortex_6, Vortex_7, Vortex_8, Vortex_9]
+    match_n = 100
+    directory = "checkpoints/Vortex_5-VorNet"
+
+    results = []
+    for Game in board_sizes:
+        board_size = Game.__name__
+        game = Game()
+        nn = NeuralNetwork(game, VorNet, cuda=True)
+        nn.load(99, directory=directory)
+
+        deep_mcts = DeepMCTSPlayer(game, nn, simulations=dmcts_sim)
+        uninformed = RolloutMCTSPlayer(game, simulations=bmcts_sim)
+        players = [deep_mcts, uninformed]
+
+        print("Board size: {}".format(board_size))
+
+        for i in range(match_n):
+            match = [board_size, i]
+            scores = play_match(game, players, verbose=False)
+            print("  match {}, score {}".format(i, scores))
+            results.append(match + scores)
+
+    player_names = [p.__class__.__name__[:-6] for p in players]
+    index = pd.MultiIndex.from_product([player_names, player_names], names=['first_player', 'score_player'])
+    df = pd.DataFrame(data=results, columns=['board_size', 'match', 'p0fp_p0win', 'p0fp_p1win', 'p1fp_p0win', 'p1fp_p1win'])
+    df = df.set_index(['board_size', 'match'])
+    df.columns = index
+    df.to_csv("./notebooks/experiment4.csv")
+
 '''
-# # %%
-# df = pd.read_csv("./exp_results/simulations_compare.csv", skiprows=[0,1]) #, index_col=[0,1])
-# df = df.set_index(['dmcts_sim', 'umcts_sim', 'match'])
-# df.columns = ['p0fp_p0win', 'p0fp_p1win', 'p1fp_p0win', 'p1fp_p1win']
-# df
-# players = ['DMCTS', 'UMCTS']
-# index = pd.MultiIndex.from_product([players, players], names=['first_player', 'score_player'])
-# df.columns = index
-# df.groupby(['dmcts_sim', 'umcts_sim']).sum()
-
-# %% [markdown]
-# **Evaluate performance of DeepMCTS on larger boards than the 25 node board it was trained on**
-# 
-# The DeepMCTS agent is run against the uniformed MCTS agent. For each board size, *match_n* matches are played.
-
-# %%
-dmcts_sim = 40
-umcts_sim = 320
-board_sizes = [Vortex_5_20, Vortex_6_20, Vortex_7_20, Vortex_8_20, Vortex_9_20]
-match_n = 100
-directory = "checkpoints/Vortex_5_20-VorNet"
-
-# %%
-results = []
-for Game in board_sizes:
-    board_size = Game.__name__
-    game = Game()
-    nn = NeuralNetwork(game, VorNet, cuda=True)
-    nn.load(checkpoint, directory=directory)
-
-    deep_mcts = DeepMCTSPlayer(game, nn, simulations=dmcts_sim)
-    uninformed = UninformedMCTSPlayer(game, simulations=umcts_sim)
-    players = [deep_mcts, uninformed]
-
-    print("Board size: {}".format(board_size))
-
-    for i in range(match_n):
-        match = [board_size, i]
-        scores = play_match(game, players, verbose=False)
-        print("  match {}, score {}".format(i, scores))
-        results.append(match + scores)
-
-# %%
-players = [0,1]
-index = pd.MultiIndex.from_product([players, players], names=['first_player', 'score_player'])
-df = pd.DataFrame(data=results, columns=['board_size', 'match', 'p0fp_p0win', 'p0fp_p1win', 'p1fp_p0win', 'p1fp_p1win'])
-df = df.set_index(['board_size', 'match'])
-df.columns = index
-df.to_csv("./notebooks/results/board_sizes.csv")
-df.groupby(['board_size']).sum()
-
-
 # %% [markdown]
 # Simulating games to generate training data is time consuming on larger boards because untrained agents act close to randomly and this results in more moves required to reach a win state. 
 # 
@@ -301,7 +326,8 @@ flags.DEFINE_integer('run_exp', 1, 'experiment to run')
 def main(_argv):
     experiments = {
         1 : experiment_1,
-        1 : experiment_2
+        2 : experiment_2,
+        3 : experiment_3
     }
     experiments[FLAGS.run_exp]()
 
