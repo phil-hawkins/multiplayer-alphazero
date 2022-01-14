@@ -1,6 +1,7 @@
 name: maz
 channels:
   - defaults
+  - pyg
   - conda-forge
 dependencies:
   - python=3.9
