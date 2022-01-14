@@ -1,0 +1,18 @@
+name: maz
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch
+  - cudatoolkit=11.3
+  - scipy
+  - matplotlib
+  - ipykernel
+  - pyg
+  - pyglet
+  - tensorboard
+  - optuna
+  - plotly
+  - joblib
+  - absl-py
+prefix: /home/philh/anaconda3/envs/maz
