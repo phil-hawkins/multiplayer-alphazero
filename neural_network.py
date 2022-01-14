@@ -110,7 +110,7 @@ class NeuralNetwork():
 
     # Saves the current network along with its current pool of training data and training error history.
     # Provide the name of the save file.
-    def save(self, name, training_data, error_log):
+    def save(self, name, training_data, error_log, timing):
         network_name = self.model.module.__class__.__name__ if self.cuda else self.model.__class__.__name__
         directory = "checkpoints/{}-{}".format(self.game.__class__.__name__, network_name)
         if not os.path.exists(directory):
@@ -121,6 +121,7 @@ class NeuralNetwork():
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'error_log': error_log,
+            'timing': timing,
             }, network_path)
         torch.save({
             'training_data': training_data,

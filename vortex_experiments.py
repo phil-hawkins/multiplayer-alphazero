@@ -5,6 +5,7 @@ import pandas as pd
 from itertools import permutations
 import numpy as np
 from time import time
+from absl import app, flags, logging
 
 from neural_network import NeuralNetwork
 from players.uninformed_mcts_player import UninformedMCTSPlayer, RolloutMCTSPlayer
@@ -294,4 +295,15 @@ df.groupby(['NoPT_checkpoint']).sum()
 '''
 
 
-experiment_1()
+FLAGS = flags.FLAGS
+flags.DEFINE_integer('run_exp', 1, 'experiment to run')
+
+def main(_argv):
+    experiments = {
+        1 : experiment_1,
+        1 : experiment_2
+    }
+    experiments[FLAGS.run_exp]()
+
+if __name__ == '__main__':
+    app.run(main)
