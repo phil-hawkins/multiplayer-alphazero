@@ -266,6 +266,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('run_exp', 1, 'experiment to run')
 
 def main(_argv):
+    print("Running experiment {}".format(FLAGS.run_exp))
     start_time = time()
     experiments = {
         1 : experiment_1,
