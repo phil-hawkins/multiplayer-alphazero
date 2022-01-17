@@ -190,11 +190,11 @@ def board_compare(Baseline_MCTSPlayer, match_n):
     return df
 
 def experiment_3():
-    df = board_compare(Baseline_MCTSPlayer=UninformedMCTSPlayer, match_n=1)
+    df = board_compare(Baseline_MCTSPlayer=UninformedMCTSPlayer, match_n=100)
     return df
 
 def experiment_4():
-    df = board_compare(Baseline_MCTSPlayer=RolloutMCTSPlayer, match_n=1)
+    df = board_compare(Baseline_MCTSPlayer=RolloutMCTSPlayer, match_n=100)
     return df
 
 
