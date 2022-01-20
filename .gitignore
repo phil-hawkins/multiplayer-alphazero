@@ -4,3 +4,4 @@ checkpoints/**
 models/vornet.py.bak
 notebooks/scratch.ipynb
 notebooks/vortex_experiments_old.ipynb
+notebooks/results/curriculum.csv
