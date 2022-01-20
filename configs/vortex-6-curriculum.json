@@ -12,7 +12,7 @@
     "num_threads": 1,
     "cuda": true,
     "verbose": true,
-    "resume": false,
+    "resume": true,
     "curriculum_checkpoint_dir": "./checkpoints/Vortex_5-VorNet",
     "curriculum_checkpoint": 99,
     "buffer_size_limit": 500000,

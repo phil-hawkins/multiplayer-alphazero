@@ -10,7 +10,7 @@ from players.deep_mcts_player import DeepMCTSPlayer
 # Object that coordinates AlphaZero training.
 class Trainer:
 
-    def __init__(self, game, nn, num_simulations, num_games, num_updates, buffer_size_limit, cpuct, num_threads, mcts_selfplay=False):
+    def __init__(self, game, nn, num_simulations, num_games, num_updates, buffer_size_limit, cpuct, num_threads, mcts_selfplay=False, temp_cutoff_move=-1, temp_endgame=0.0):
         self.game = game
         self.nn = nn
         self.num_simulations = num_simulations
@@ -22,6 +22,8 @@ class Trainer:
         self.num_threads = num_threads
         self.error_log = []
         self.mcts_selfplay = mcts_selfplay
+        self.temp_cutoff_move = temp_cutoff_move
+        self.temp_endgame = temp_endgame
 
 
     # Does one game of self play and generates training samples.
@@ -34,7 +36,10 @@ class Trainer:
         root = True
         alpha = 1
         weight = .25
+        move = 0
         while scores is None:
+            if move == self.temp_cutoff_move:
+                temperature = self.temp_endgame
             
             # Think
             for _ in range(self.num_simulations):
@@ -63,6 +68,7 @@ class Trainer:
 
             # Check scores
             scores = self.game.check_game_over(s)
+            move += 1
 
         # Update training examples with outcome
         for i, _ in enumerate(data):

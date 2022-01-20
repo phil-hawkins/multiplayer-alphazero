@@ -9,7 +9,7 @@ from models.vornet import VorNet
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from games.connect3x3 import Connect3x3
-from games.vortex import Vortex_5
+from games.vortex import Vortex_5, Vortex_6, Vortex_7, Vortex_8, Vortex_9, Vortex_9_NoPT
 from neural_network import NeuralNetwork
 from trainer import Trainer
 from experiments import evaluate_against_uninformed, evaluate_against_mcts
@@ -24,12 +24,27 @@ game = globals()[config["game"]]()
 model_class = globals()[config["model"]]
 sims = config["num_simulations"]
 cuda = config["cuda"]
-nn = NeuralNetwork(game=game, model_class=model_class, lr=config["lr"],
-    weight_decay=config["weight_decay"], batch_size=config["batch_size"], cuda=cuda)
-trainer = Trainer(game=game, nn=nn, num_simulations=sims,
-num_games=config["num_games"], num_updates=config["num_updates"], 
-buffer_size_limit=config["buffer_size_limit"], cpuct=config["cpuct"],
-num_threads=config["num_threads"])
+
+nn = NeuralNetwork(
+    game=game, 
+    model_class=model_class, 
+    lr=config["lr"],
+    weight_decay=config["weight_decay"], 
+    batch_size=config["batch_size"], 
+    cuda=cuda
+)
+trainer = Trainer(
+    game=game, 
+    nn=nn, 
+    num_simulations=sims,
+    num_games=config["num_games"], 
+    num_updates=config["num_updates"], 
+    buffer_size_limit=config["buffer_size_limit"], 
+    cpuct=config["cpuct"],
+    num_threads=config["num_threads"],
+    temp_cutoff_move=config["temp_cutoff_move"],
+    temp_endgame=config["temp_endgame"]
+)
 
 # Logic for resuming training
 checkpoints = nn.list_checkpoints()
