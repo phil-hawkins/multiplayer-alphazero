@@ -70,7 +70,9 @@ else:
 i = 0
 report_frequncy = 10
 results = {}
-while True:
+
+for i in range(100):
+#while True:
     tic = time()
     # Run multiple policy iterations to develop a checkpoint.
     for _ in range(config["ckpt_frequency"]):
@@ -97,7 +99,7 @@ while True:
         else:
             results[opponent_strength] = scores
     
-    i += 1
+    #i += 1
     if (i % report_frequncy == 0):
         print("Results for last {} iterations".format(report_frequncy))
         for os in results.keys():
