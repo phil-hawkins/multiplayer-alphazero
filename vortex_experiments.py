@@ -148,6 +148,27 @@ def experiment_2():
     )
     return results_df
 
+def experiment_5():
+    """
+    Compare:
+    - Agent 1: network trained by MCTS self play, then NN self play on 5x5 Vortex board - 100 simulations
+    - Agent 2: standard MCTS (with rollout) - range of sims
+    """
+    dmcts_sims = [100]
+    bmcts_sims = list(range(2500, 3501, 500))
+    match_n = 500
+    nn = NeuralNetwork(Vortex_5(), VorNet, cuda=True)
+    nn.load(99)
+
+    results_df = simulations_compare(
+        nn=nn,
+        dmcts_sims=dmcts_sims, 
+        bmcts_player_cls=RolloutMCTSPlayer,
+        bmcts_sims=bmcts_sims, 
+        match_n=match_n
+    )
+    return results_df
+
 
 def board_compare(Baseline_MCTSPlayer, match_n):
     # **Evaluate performance of DeepMCTS on larger boards than the 25 node board it was trained on**
@@ -272,7 +293,8 @@ def main(_argv):
         1 : experiment_1,
         2 : experiment_2,
         3 : experiment_3,
-        4 : experiment_4
+        4 : experiment_4,
+        5 : experiment_5
     }
     df = experiments[FLAGS.run_exp]()
     df.to_csv("./exp_results/experiment{}_{}-{}.csv".format(FLAGS.run_exp, start_time, time()))
