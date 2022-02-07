@@ -191,13 +191,12 @@ def experiment_6():
     return results_df
 
 
-def board_compare(Baseline_MCTSPlayer, match_n):
+def board_compare(Baseline_MCTSPlayer, match_n, bmcts_sims):
     # **Evaluate performance of DeepMCTS on larger boards than the 25 node board it was trained on**
     # 
     # The DeepMCTS agent is run against the uniformed MCTS agent. For each board size, *match_n* matches are played.
 
     dmcts_sim = 250
-    bmcts_sims = range(250, 1001, 250)
     board_sizes = [Vortex_5, Vortex_6, Vortex_7, Vortex_8, Vortex_9]
     directory = "checkpoints/Vortex_5-VorNet"
 
@@ -232,14 +231,19 @@ def board_compare(Baseline_MCTSPlayer, match_n):
     return df
 
 def experiment_3():
-    df = board_compare(Baseline_MCTSPlayer=UninformedMCTSPlayer, match_n=100)
+    bmcts_sims = range(250, 1001, 250)
+    df = board_compare(Baseline_MCTSPlayer=UninformedMCTSPlayer, match_n=100, bmcts_sims=bmcts_sims)
     return df
 
 def experiment_4():
-    df = board_compare(Baseline_MCTSPlayer=RolloutMCTSPlayer, match_n=100)
+    bmcts_sims = range(250, 1001, 250)
+    df = board_compare(Baseline_MCTSPlayer=RolloutMCTSPlayer, match_n=100, bmcts_sims=bmcts_sims)
     return df
 
-
+def experiment_7():
+    bmcts_sims = range(1250, 2001, 250)
+    df = board_compare(Baseline_MCTSPlayer=RolloutMCTSPlayer, match_n=100, bmcts_sims=bmcts_sims)
+    return df
 
 '''
 
@@ -316,7 +320,8 @@ def main(_argv):
         3 : experiment_3,
         4 : experiment_4,
         5 : experiment_5,
-        6 : experiment_6
+        6 : experiment_6,
+        7 : experiment_7
     }
     df = experiments[FLAGS.run_exp]()
     df.to_csv("./exp_results/experiment{}_{}-{}.csv".format(FLAGS.run_exp, start_time, time()))
