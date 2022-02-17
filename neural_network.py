@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import os
+import shutil
 from games.hex.vortex_board import VortexBoard
 from games.vortex import Vortex_5
 
@@ -117,6 +118,8 @@ class NeuralNetwork():
             os.makedirs(directory)
         network_path = "{}/{}.ckpt".format(directory, name)
         data_path = "{}/training.data".format(directory)
+        if os.path.isfile(data_path):
+            shutil.copy2(data_path, data_path+'.bak')  
         torch.save({
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
