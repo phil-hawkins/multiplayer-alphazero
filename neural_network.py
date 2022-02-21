@@ -119,7 +119,10 @@ class NeuralNetwork():
         network_path = "{}/{}.ckpt".format(directory, name)
         data_path = "{}/training.data".format(directory)
         if os.path.isfile(data_path):
-            shutil.copy2(data_path, data_path+'.bak')  
+            print(data_path + ' found, making backup')
+            shutil.copy2(data_path, data_path+'.bak')
+        else:
+            print(data_path + ' not found')
         torch.save({
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
