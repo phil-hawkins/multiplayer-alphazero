@@ -1,11 +1,12 @@
-name: maz
+name: maz2
 channels:
   - defaults
+  - pytorch
   - pyg
   - conda-forge
 dependencies:
   - python=3.9
-  - pytorch
+  - pytorch=1.9.1
   - cudatoolkit=11.3
   - scipy
   - matplotlib
@@ -17,4 +18,4 @@ dependencies:
   - plotly
   - joblib
   - absl-py
-prefix: /home/philh/anaconda3/envs/maz
+
