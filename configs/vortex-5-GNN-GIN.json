@@ -3,7 +3,7 @@
     "model": "VornetGIN",
     "ckpt_frequency": 1,
     "num_updates": 1000,
-    "num_games": 2,
+    "num_games": 100,
     "weight_decay": 5e-5,
     "lr": 1e-4,
     "cpuct": 3,
