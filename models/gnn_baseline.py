@@ -35,7 +35,7 @@ class GNNBaseline(Module):
                 x = m(x, edge_index)
             else:
                 x = m(x)
-                
+
         B = B // 2
         x = x.view(B, 2, N, F)
         F = F * 2
@@ -75,7 +75,7 @@ class VornetCheb(GNNBaseline):
         self.value_head = MLP.value_head(2*4*out_features)
 
 class VornetGIN(GNNBaseline):
-    def __init__(self, in_features, out_features, layers=19):
+    def __init__(self, in_features=3, out_features=120, layers=19):
         super(GNNBaseline, self).__init__()
 
         self.out_features = out_features
@@ -89,3 +89,7 @@ class VornetGIN(GNNBaseline):
 
         self.policy_head = MLP.policy_head(2*out_features)
         self.value_head = MLP.value_head(2*4*out_features)
+
+class VornetGIN_3L(VornetGIN):
+    def __init__(self, in_features=3, out_features=120):
+        super(VornetGIN, self).__init__(in_features=3, out_features=120, layers=3)
