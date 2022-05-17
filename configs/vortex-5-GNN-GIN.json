@@ -10,7 +10,7 @@
     "num_simulations": 100,
     "batch_size": 256,
     "num_threads": 1,
-    "cuda": false,
+    "cuda": true,
     "verbose": true,
     "resume": false,
     "buffer_size_limit": 500000,
