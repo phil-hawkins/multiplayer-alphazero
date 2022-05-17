@@ -6,6 +6,7 @@ from time import time
 from models.senet import SENet
 from models.senetbig import SENetBig
 from models.vornet import VorNet
+from models.gnn_baseline import VornetCheb, VornetGAT, VornetGCN, VornetGIN
 from games.tictactoe import TicTacToe
 from games.tictacmo import TicTacMo
 from games.connect3x3 import Connect3x3

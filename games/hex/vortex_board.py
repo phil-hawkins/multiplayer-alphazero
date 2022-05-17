@@ -222,6 +222,14 @@ class VortexBoard():
             x1[-1] = x[-3]
         return x1
 
+    def get_player_graphs(self):
+        current_player = self.get_player()
+
+        x_1, edge_index_1, _ = self.get_vor_attr(current_player)
+        x_2, edge_index_2, _ = self.get_vor_attr((current_player+1)%2)
+        
+        return x_1, x_2, edge_index_1, edge_index_2
+
     def get_available_actions(self):
         return ~((self.node_attr[:, HORIZONTAL_PLAYER] > 0.) | (self.node_attr[:, VERTICAL_PLAYER] > 0.))
 

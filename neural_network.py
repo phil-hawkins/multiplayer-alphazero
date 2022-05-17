@@ -4,6 +4,7 @@ import os
 import shutil
 from games.hex.vortex_board import VortexBoard
 from games.vortex import Vortex_5
+from models.gnn_baseline import GNNBaseline
 
 
 # Object that manages interfacing data with the underlying PyTorch model, as well as checkpointing models.
@@ -15,7 +16,10 @@ class NeuralNetwork():
         input_shape = game.get_initial_state().shape
         p_shape = game.get_available_actions(game.get_initial_state()).shape
         v_shape = (game.get_num_players(),)
-        self.model = model_class(input_shape, p_shape, v_shape)
+        if issubclass(model_class, GNNBaseline): 
+            self.model = model_class()
+        else:
+            self.model = model_class(input_shape, p_shape, v_shape)
         self.cuda = cuda
         if self.cuda:
             self.model = self.model.to('cuda')
@@ -33,15 +37,55 @@ class NeuralNetwork():
             
         return nn_states, states
 
+    def get_batch_graphs(self, states):
+        """ convert a batch of Vortex state objects to graph tensor input
+
+        each state has a pair of graphs, one fr each player, consisting of node features and edge indexes
+        """
+        
+        node_count = states[0].node_count
+        state_count = states.shape[0]
+        # this is the batch size of model input, hence 2 x number of states
+        batch_size = state_count * 2
+
+        nn_states = [s.get_player_graphs() for s in states]
+        x_1, x_2, edge_index_1, edge_index_2 = zip(*nn_states)
+
+        x_1 = np.stack(x_1)
+        x_2 = np.stack(x_2)
+        feature_count = x_1.shape[2]
+        x = np.stack([x_1, x_2], axis=1).reshape(batch_size*node_count, feature_count)
+
+        # build the edge index of the combines set of diconnected graphs
+        edge_index = []
+        for i in range(state_count):
+            edge_index.append(edge_index_1[i] + (i*2*node_count))
+            edge_index.append(edge_index_2[i] + ((i*2+1)*node_count))
+        edge_index = np.concatenate(edge_index, axis=1)
+
+        graph_batch = np.arange(batch_size).repeat(node_count)
+
+        return np.float32(x), edge_index, graph_batch
+
     # Incoming data is a numpy array containing (state, prob, outcome) tuples.
     def train(self, data):
         self.model.train()
         batch_size=self.batch_size
         idx = np.random.randint(len(data), size=batch_size)
         batch = data[idx]
-        nn_states, states = self.get_batch_states(batch)
-        x = torch.from_numpy(nn_states)
-        p_pred, v_pred = self.model(x)
+        if issubclass(self.model.__class__, GNNBaseline):
+            states = np.stack(batch[:,0])
+            x, edge_index, graph_batch = self.get_batch_graphs(states)
+            device = self.model.device
+            p_pred, v_pred = self.model(
+                torch.from_numpy(x).to(device=device), 
+                torch.from_numpy(edge_index).to(device=device), 
+                torch.from_numpy(graph_batch).to(device=device)
+            )
+        else:
+            nn_states, states = self.get_batch_states(batch)
+            x = torch.from_numpy(nn_states)
+            p_pred, v_pred = self.model(x)
         p_gt, v_gt = batch[:,1], np.stack(batch[:,2])
         loss = self.loss(states, (p_pred, v_pred), (p_gt, v_gt))
         self.optimizer.zero_grad()
@@ -51,9 +95,19 @@ class NeuralNetwork():
 
     def train_step(self, batch, writer, step):
         self.model.train()
-        nn_states, states = self.get_batch_states(batch)
-        x = torch.from_numpy(nn_states)
-        p_pred, v_pred = self.model(x)
+        if issubclass(self.model.__class__, GNNBaseline):
+            states = np.stack(batch[:,0])
+            x, edge_index, graph_batch = self.get_batch_graphs(states)
+            device = self.model.device
+            p_pred, v_pred = self.model(
+                torch.from_numpy(x).to(device=device), 
+                torch.from_numpy(edge_index).to(device=device), 
+                torch.from_numpy(graph_batch).to(device=device)
+            )
+        else:
+            nn_states, states = self.get_batch_states(batch)
+            x = torch.from_numpy(nn_states)
+            p_pred, v_pred = self.model(x)
         p_gt, v_gt = batch[:,1], np.stack(batch[:,2])
         loss = self.loss(states, (p_pred, v_pred), (p_gt, v_gt))
         self.optimizer.zero_grad()
@@ -66,12 +120,23 @@ class NeuralNetwork():
     def predict(self, s):
         self.model.eval()
         with torch.no_grad():
-            if isinstance(s, VortexBoard):
-                input_s = np.expand_dims(s.nn_attr, axis=0)
+            if issubclass(self.model.__class__, GNNBaseline):
+                x, edge_index, batch = self.get_batch_graphs(np.array([s]))
+                
+                device = self.model.device
+                p_logits, v = self.model(
+                    torch.from_numpy(x).to(device=device), 
+                    torch.from_numpy(edge_index).to(device=device), 
+                    torch.from_numpy(batch).to(device=device)
+                )
             else:
-                input_s = np.array([s])
-            input_s = torch.from_numpy(input_s)
-            p_logits, v = self.model(input_s)
+                if isinstance(s, VortexBoard):
+                    input_s = np.expand_dims(s.nn_attr, axis=0)
+                else:
+                    input_s = np.array([s])
+                input_s = torch.from_numpy(input_s)
+                p_logits, v = self.model(input_s)
+
             p, v = self.get_valid_dist(s, p_logits[0]).cpu().numpy().squeeze(), v.cpu().numpy().squeeze() # EXP because log softmax
         return p, v
 

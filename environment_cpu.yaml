@@ -1,0 +1,20 @@
+name: maz
+channels:
+  - defaults
+  - pytorch
+  - pyg
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pytorch
+  - cpuonly
+  - scipy
+  - matplotlib
+  - ipykernel
+  - pyg
+  - pyglet
+  - tensorboard
+  - optuna
+  - plotly
+  - joblib
+  - absl-py
