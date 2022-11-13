@@ -1,39 +1,29 @@
-# Journal Article
-https://arxiv.org/abs/1910.13012
+# Vortex for Alpha Zero
+An agent for playing the game Vortex based on a Graph Network and DeepMind's AlphaZero algorithm.
 
-# What is this
-An independent implementation of DeepMind's AlphaZero algorithm with support for multiplayer games.
-AlphaZero is a deep reinforcement learning algorithm which can learn to master a certain class of adversarial games through self-play.
-Strategies are learned *tabula rasa* and, with enough time and computation, achieve super-human performance.
-The canonical AlphaZero algorithm is intended for 2-player games like Chess and Go, though this project supports multiplayer games as well.
+Vortex is the game [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)), generalised to a graph. In order to play Vortex effectively, the agent must balance several risks. Selecting vertices too closely together gives the opponent freedom to form their connection. However, selecting vertices with gaps that cannot be defended, provides the opponent with an opportunity to block the path.
+Deep Reinforcement Learning agents such as AlphaZero have demonstrated super-human levels of skill in complex games. However, the techniques employed by AI game agents rarely generalise to real world challenges. In part this is may be due to a dependence on the artificially regular structure and dimensions of grid-based game boards. 
 
-# Benefits
+Vortex provides a novel challenge in this respect, due to both the irregular structure of the graph that it is played on, and the fact that the Vortex graph is generated differently for each game. Each graph is connected differently and may vary widely in scale, containing a different number of vertices and edges. A Vortex playing agent must learn strategic patterns without the scaffold of a regular spatial framework such as the grid structure of games like Chess and Go. Furthermore it must learn underlying patterns of vertex connectivity that generalise to random boards rather than fitting to a fixed structure.
 
-### Clean & Simple
-Clear and concise - a no-frills AlphaZero implementation written with Python 3 and PyTorch.
-Extensively commented and easy to extend.
-Support for CPU and GPU training, as well as pausing and resuming training.
+## Installing dependencies
 
-### Modular & Extensible
-Easily plug in your own games or neural networks by implementing the Game and Model interface. Only PyTorch models are supported. Example games and networks included with this repo are listed below.
+For GPU:
 
-#### Example Games
-- Tic-Tac-Toe
-- Tic-Tac-Mo
-- Connect 3x3
+`conda env create -f environment.yml`
 
-#### Example Networks
-- SENet
+For CPU:
 
-### Novel Multiplayer Support
-The first of its kind; support for games with more than 2 players.
+`conda env create -f environment_cpu.yml`
 
+Training without a GPU is likely to be rather slow, however if this is intended, the config file used in training must be apdated to diable GPU as follows:
 
-# Tutorial
+`"cuda": false`
 
-## Training an agent
-You can start training your own AlphaZero agents very easily.
+## Training the agent
 
-`python main.py configs/my_run_configuration.json`
+`python main.py configs/vortex-5-20-gpu.json`
 
-You must run main.py with the location of a run configuration json file as the first argument.
+## Playing against the trained agent in a GUI
+
+`python hex_gui.py`

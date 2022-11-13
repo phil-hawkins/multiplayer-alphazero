@@ -45,21 +45,15 @@ if __name__ == "__main__":
     from models.senet import SENet
     from players.uninformed_mcts_player import UninformedMCTSPlayer
     from players.deep_mcts_player import DeepMCTSPlayer
-    from games.tictactoe import TicTacToe
-    from games.tictacmo import TicTacMo
+    from games.vortex import Vortex
 
 
     # Change these variable 
-    game = TicTacMo()
-    #ckpt = 15
-    #nn = NeuralNetwork(game, SENet, cuda=True)
-    #nn.load(ckpt)
+    game = Vortex()
+    n = NeuralNetwork(game, SENet, cuda=True)
+    n.load(97, directory="checkpoints/Vortex_5-VorNet")
     
-    # HumanPlayer(game),
-    # UninformedMCTSPlayer(game, simulations=1000)
-    # DeepMCTSPlayer(game, nn, simulations=50)
-    
-    players = [HumanPlayer(game), HumanPlayer(game),UninformedMCTSPlayer(game, simulations=3000)]
+    players = [HumanPlayer(game), DeepMCTSPlayer(game, n, simulations=50)]
     for _ in range(1):
         play_match(game, players, verbose=True, permute=True)
     
