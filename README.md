@@ -1,4 +1,9 @@
 # Vortex for Alpha Zero
+
+<img src="images/vortex.png"
+     alt="Search heuristic network"
+     style="float: margin-bottom: 100px;" />
+
 An agent for playing the game Vortex based on a Graph Network and DeepMind's AlphaZero algorithm.
 
 Vortex is the game [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)), generalised to a graph. In order to play Vortex effectively, the agent must balance several risks. Selecting vertices too closely together gives the opponent freedom to form their connection. However, selecting vertices with gaps that cannot be defended, provides the opponent with an opportunity to block the path.
